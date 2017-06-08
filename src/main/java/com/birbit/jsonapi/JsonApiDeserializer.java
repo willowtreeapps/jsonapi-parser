@@ -29,9 +29,10 @@ import java.util.*;
 public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
     Map<String, JsonApiResourceDeserializer<?>> deserializerMap;
     final Map<Class, String> typeMapping;
+
     public JsonApiDeserializer(JsonApiResourceDeserializer... deserializers) {
-        deserializerMap = new HashMap<String, JsonApiResourceDeserializer<?>>((int) (deserializers.length * 1.25));
-        typeMapping = new HashMap<Class, String>();
+        deserializerMap = new HashMap<>((int) (deserializers.length * 1.25));
+        typeMapping = new HashMap<>();
         for (JsonApiResourceDeserializer deserializer : deserializers) {
             deserializerMap.put(deserializer.apiType, deserializer);
             String previous = typeMapping.put(deserializer.klass, deserializer.apiType);
@@ -100,7 +101,7 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
             included = new HashMap<String, Map<String, Object>>();
             JsonArray includedArray = includedElm.getAsJsonArray();
             final int size = includedArray.size();
-            for (int i = 0; i < size; i ++) {
+            for (int i = 0; i < size; i++) {
                 ResourceWithIdAndType parsed = parseResource(includedArray.get(i), context);
                 if (parsed.resource != null) {
                     Map<String, Object> itemMap = included.get(parsed.apiType);
@@ -128,14 +129,14 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
                 if (isArray) {
                     TypeToken<?> typeToken = TypeToken.get(typeArg);
                     Object[] result = (Object[]) Array.newInstance(typeToken.getRawType().getComponentType(), size);
-                    for (int i = 0; i < size; i ++) {
+                    for (int i = 0; i < size; i++) {
                         ResourceWithIdAndType resourceWithIdAndType = parseResource(jsonArray.get(i), context);
                         result[i] = resourceWithIdAndType.resource;
                     }
                     return result;
                 } else {
                     List result = new ArrayList(size);
-                    for (int i = 0; i < size; i ++) {
+                    for (int i = 0; i < size; i++) {
                         ResourceWithIdAndType resourceWithIdAndType = parseResource(jsonArray.get(i), context);
                         //noinspection unchecked
                         result.add(resourceWithIdAndType.resource);

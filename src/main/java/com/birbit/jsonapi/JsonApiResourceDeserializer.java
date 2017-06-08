@@ -164,9 +164,7 @@ public class JsonApiResourceDeserializer<T> {
             t = parseObject(context, id, jsonObject);
             parseRelationships(context, t, jsonObject);
             parseLinks(context, t, jsonObject);
-        } catch (IllegalAccessException e) {
-            throw new JsonParseException("Cannot set ID/link on " + t, e);
-        } catch (InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
             throw new JsonParseException("Cannot set ID/link on " + t, e);
         } catch (InstantiationException e) {
             throw new JsonParseException("Cannot create an instance of " + klass + ". Make sure it has a no-arg" +
