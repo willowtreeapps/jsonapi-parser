@@ -32,7 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ErrorTest {
     @Test
     public void testError() throws IOException {
-        String json = TestUtil.readTestData("error.json");
+        String json = TestUtil.resourceToString("error.json");
         Gson gson = TestUtil.createGson();
         JsonApiResponse<Dummy> response = gson.fromJson(json, new TypeToken<JsonApiResponse<Dummy>>(){}.getType());
         assertThat(response.getErrors().size(), is(3));

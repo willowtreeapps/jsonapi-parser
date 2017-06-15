@@ -20,6 +20,7 @@ import com.birbit.jsonapi.vo.Article;
 import com.birbit.jsonapi.vo.ArticleWithFullRelationships;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -27,17 +28,22 @@ import org.junit.runners.JUnit4;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static com.birbit.jsonapi.TestUtil.*;
-import static org.hamcrest.CoreMatchers.*;
+import static com.birbit.jsonapi.TestUtil.ARTICLE_DESERIALIZER;
+import static com.birbit.jsonapi.TestUtil.ARTICLE_WITH_RELATIONSHIP_OBJECTS_DESERIALIZER;
+import static com.birbit.jsonapi.TestUtil.AUTHOR_DESERIALIZER;
+import static com.birbit.jsonapi.TestUtil.COMMENT_DESERIALIZER;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@RunWith(JUnit4.class)
 public class BlogTest {
     @Test
     public void blogWithRelationshipIdsTest() throws IOException {
-        String json = TestUtil.readTestData("blog.json");
+        String json = TestUtil.resourceToString("blog.json");
         Gson gson = TestUtil.createGson(AUTHOR_DESERIALIZER, ARTICLE_DESERIALIZER, COMMENT_DESERIALIZER);
-        JsonApiResponse<Article[]> response = gson.fromJson(json, new TypeToken<JsonApiResponse<Article[]>>(){}.getType());
+        JsonApiResponse<Article[]> response = gson.fromJson(json, new TypeToken<JsonApiResponse<Article[]>>() {
+        }.getType());
         Article[] articles = response.getData();
         assertThat(articles, notNullValue());
         assertThat(articles.length, is(1));
@@ -65,10 +71,11 @@ public class BlogTest {
 
     @Test
     public void blogWithRelationshipObjectsTest() throws IOException {
-        String json = TestUtil.readTestData("blog.json");
+        String json = TestUtil.resourceToString("blog.json");
         Gson gson = TestUtil.createGson(AUTHOR_DESERIALIZER, ARTICLE_WITH_RELATIONSHIP_OBJECTS_DESERIALIZER, COMMENT_DESERIALIZER);
         JsonApiResponse<ArticleWithFullRelationships[]> response
-                = gson.fromJson(json, new TypeToken<JsonApiResponse<ArticleWithFullRelationships[]>>(){}.getType());
+                = gson.fromJson(json, new TypeToken<JsonApiResponse<ArticleWithFullRelationships[]>>() {
+        }.getType());
         ArticleWithFullRelationships[] articles = response.getData();
         assertThat(articles, notNullValue());
         assertThat(articles.length, is(1));
