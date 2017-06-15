@@ -33,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class LinkDataTest {
     @Test
     public void fooTest() throws IOException {
-        String json = TestUtil.readTestData("with_link_data.json");
+        String json = TestUtil.resourceToString("with_link_data.json");
         Gson gson = TestUtil.createGson(new JsonApiResourceDeserializer("users", User.class));
         JsonApiResponse<User> response = gson.fromJson(json, new TypeToken<JsonApiResponse<User>>() {}.getType());
         User user = response.getData();

@@ -22,6 +22,16 @@ repositories {
     jcenter()
 }
 
+
+// To fix intellij/android-studio bug where it
+// doesn't add resources to runtime classpath
+// https://stackoverflow.com/questions/25513788/intellij-cant-find-classpath-test-resource
+task copyTestResources(type: Copy) {
+    from "${projectDir}/src/test/resources"
+    into "${buildDir}/classes/test"
+}
+processTestResources.dependsOn copyTestResources
+
 dependencies {
     api 'com.google.code.gson:gson:2.7'
     implementation 'com.android.tools:annotations:25.2.1'
