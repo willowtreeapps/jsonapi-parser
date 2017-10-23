@@ -32,6 +32,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -108,7 +109,7 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
         JsonElement includedElm = jsonObject.get("included");
         Map<String, Map<String, Object>> included;
         if (includedElm != null && includedElm.isJsonArray()) {
-            included = new HashMap<>();
+            included = new LinkedHashMap<>();
             JsonArray includedArray = includedElm.getAsJsonArray();
             final int size = includedArray.size();
             for (int i = 0; i < size; i++) {
@@ -116,7 +117,7 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
                 if (parsed.resource != null) {
                     Map<String, Object> itemMap = included.get(parsed.apiType);
                     if (itemMap == null) {
-                        itemMap = new HashMap<>();
+                        itemMap = new LinkedHashMap<>();
                         included.put(parsed.apiType, itemMap);
                     }
                     itemMap.put(parsed.id, parsed.resource);
