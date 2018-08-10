@@ -178,6 +178,8 @@ public class JsonApiResourceDeserializer<T> {
         JsonElement links = jsonObject.get("links");
         if (links != null && links.isJsonObject()) {
             JsonObject linksObject = links.getAsJsonObject();
+            if(linkSetters == null)
+                return;
             Setter linksObjectSetter = linkSetters.get("");
             if (linksObjectSetter != null) {
                 linksObjectSetter.setOnObject(t, context.deserialize(links, JsonApiLinks.class));
