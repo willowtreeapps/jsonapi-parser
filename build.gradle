@@ -33,9 +33,9 @@ task copyTestResources(type: Copy) {
 processTestResources.dependsOn copyTestResources
 
 dependencies {
-    api 'com.google.code.gson:gson:2.7'
-    implementation 'com.android.tools:annotations:25.2.1'
-    implementation 'commons-io:commons-io:2.5'
+    api 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.android.tools:annotations:26.3.2'
+    implementation 'commons-io:commons-io:2.6'
 
     testCompile 'junit:junit:4.12'
 }
