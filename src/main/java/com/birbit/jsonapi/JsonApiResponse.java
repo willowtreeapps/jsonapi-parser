@@ -26,24 +26,29 @@ import java.util.Map;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class JsonApiResponse<T> {
     private final T data;
+    private final JsonApiMeta meta;
     private final Map<String, Map<String, ?>> included;
     private final Map<Class, String> typeMapping;
     private final JsonApiLinks links;
     @Nullable
     private final List<JsonApiError> errors;
 
-    public JsonApiResponse(@Nullable T data, @NonNull Map<String, Map<String, ?>> included,
+    public JsonApiResponse(@Nullable T data, @Nullable JsonApiMeta meta,
+                           @NonNull Map<String, Map<String, ?>> included,
                            @NonNull Map<Class, String> typeMapping, @NonNull JsonApiLinks links) {
         this.data = data;
+        this.meta = meta;
         this.errors = null;
         this.included = included;
         this.typeMapping = typeMapping;
         this.links = links;
     }
 
-    public JsonApiResponse(List<JsonApiError> errors, @NonNull Map<Class, String> typeMapping,
+    public JsonApiResponse(List<JsonApiError> errors, @Nullable JsonApiMeta meta,
+                           @NonNull Map<Class, String> typeMapping,
                            @NonNull JsonApiLinks links) {
         this.data = null;
+        this.meta = meta;
         this.included = Collections.emptyMap();
         this.errors = errors;
         this.typeMapping = typeMapping;
@@ -53,6 +58,11 @@ public class JsonApiResponse<T> {
     @Nullable
     public T getData() {
         return data;
+    }
+
+    @Nullable
+    public JsonApiMeta getMeta() {
+        return meta;
     }
 
     @NonNull

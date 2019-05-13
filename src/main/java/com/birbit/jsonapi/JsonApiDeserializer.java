@@ -16,6 +16,7 @@
 
 package com.birbit.jsonapi;
 
+import com.android.annotations.Nullable;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -72,15 +73,16 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
 
         Object data = parseData(context, parameterizedType, jsonObject);
         List<JsonApiError> errors = parserErrors(context, jsonObject);
+        JsonApiMeta meta = parseMeta(context, jsonObject);
         if ((data == null) == (errors == null)) {
             throw new JsonParseException("The JSON API response should have data or errors");
         }
         if (errors != null) {
-            return new JsonApiResponse(errors, typeMapping, links);
+            return new JsonApiResponse(errors, meta, typeMapping, links);
         }
         Map<String, Map<String, Object>> included = parseIncluded(context, jsonObject);
         //noinspection unchecked
-        return new JsonApiResponse(data, included, typeMapping, links);
+        return new JsonApiResponse(data, meta, included, typeMapping, links);
     }
 
     protected List<JsonApiError> parserErrors(JsonDeserializationContext context, JsonObject jsonObject) {
@@ -103,6 +105,16 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
             return JsonApiLinks.EMPTY;
         }
         return context.deserialize(links, JsonApiLinks.class);
+    }
+
+    protected JsonApiMeta parseMeta(JsonDeserializationContext context, JsonObject jsonObject) {
+        JsonElement metaElm = jsonObject.get("meta");
+
+        if (metaElm != null && metaElm.isJsonObject()) {
+            return new JsonApiMeta(context, metaElm.getAsJsonObject());
+        }
+
+        return null;
     }
 
     protected Map<String, Map<String, Object>> parseIncluded(JsonDeserializationContext context, JsonObject jsonObject) {
@@ -165,14 +177,49 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
         JsonObject jsonObject = jsonElement.getAsJsonObject();
         String apiType = jsonObject.get("type").getAsString();
         String id = jsonObject.get("id").getAsString();
+        // Added by WillowTree
+        JsonApiDataMeta dataMeta = parseDataMeta(jsonObject.get("meta"));
         JsonApiResourceDeserializer<?> deserializer = deserializerMap.get(apiType);
         Object resource;
         if (deserializer != null) {
-            resource = deserializer.deserialize(id, jsonElement, context);
+            resource = deserializer.deserialize(id, dataMeta, jsonElement, context);
         } else {
             resource = null;
         }
-        return new ResourceWithIdAndType(apiType, id, resource);
+        return new ResourceWithIdAndType(apiType, id, dataMeta, resource);
+    }
+
+    // Added by WillowTree
+
+    /**
+     * This method is here to handle a specific case when there is a "meta" object
+     * contained within the top level "data" object in the JSON response.
+     * <p/>
+     * Note: This <strong>does not</strong> conform to the JsonApi spec!
+     */
+    @Nullable
+    protected JsonApiDataMeta parseDataMeta(JsonElement jsonElement) {
+        if (jsonElement == null || jsonElement.isJsonNull() || !jsonElement.isJsonObject()) {
+            return null;
+        }
+
+        final JsonObject jsonObject = jsonElement.getAsJsonObject();
+        final Map<String, Map<String, Object>> dataMetaMap = new HashMap<>();
+        for (String key : jsonObject.keySet()) {
+            if (jsonObject.get(key).isJsonObject()) {
+                final JsonObject inner = jsonObject.get(key).getAsJsonObject();
+                final Map<String, Object> stringMap = new HashMap<>();
+                for (String oKey : inner.keySet()) {
+                    if (inner.get(oKey).isJsonArray()) {
+                        stringMap.put(oKey, inner.get(oKey).getAsJsonArray());
+                    } else {
+                        stringMap.put(oKey, inner.get(oKey).getAsString());
+                    }
+                }
+                dataMetaMap.put(key, stringMap);
+            }
+        }
+        return new JsonApiDataMeta(dataMetaMap);
     }
 
     public static GsonBuilder register(GsonBuilder builder, JsonApiResourceDeserializer... deserializers) {
@@ -183,11 +230,13 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
     static class ResourceWithIdAndType {
         final String apiType;
         final String id;
+        final JsonApiDataMeta dataMeta; // Added by WillowTree
         final Object resource;
 
-        public ResourceWithIdAndType(String apiType, String id, Object resource) {
+        public ResourceWithIdAndType(String apiType, String id, JsonApiDataMeta dataMeta, Object resource) {
             this.apiType = apiType;
             this.id = id;
+            this.dataMeta = dataMeta;
             this.resource = resource;
         }
     }
