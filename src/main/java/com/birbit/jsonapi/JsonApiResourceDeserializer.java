@@ -16,6 +16,7 @@
 
 package com.birbit.jsonapi;
 
+import com.birbit.jsonapi.annotations.DataMeta;
 import com.birbit.jsonapi.annotations.Relationship;
 import com.birbit.jsonapi.annotations.ResourceId;
 import com.birbit.jsonapi.annotations.ResourceLink;
@@ -35,6 +36,7 @@ public class JsonApiResourceDeserializer<T> {
     private Map<String, Setter> relationshipSetters;
     private Map<String, Setter> linkSetters;
     private Setter idSetter;
+    private Setter dataMetaSetter; // Added by WillowTree
     final String apiType;
 
     @SuppressWarnings("WeakerAccess")
@@ -48,6 +50,14 @@ public class JsonApiResourceDeserializer<T> {
                 validateResourceId(field.getType());
                 idSetter = new FieldSetter(field);
             }
+
+            // Added by WillowTree
+            DataMeta dataMeta = field.getAnnotation(DataMeta.class);
+            if (dataMeta != null) {
+                validateDataMeta(field.getType());
+                dataMetaSetter = new FieldSetter(field);
+            }
+
             Relationship relationship = field.getAnnotation(Relationship.class);
             if (relationship != null) {
                 String name = validateRelationship(field.getType(), relationship);
@@ -65,6 +75,12 @@ public class JsonApiResourceDeserializer<T> {
             if (resourceId != null) {
                 validateMethodParameters(ResourceId.class, method);
                 idSetter = new MethodSetter(method);
+            }
+            // Added by WillowTree
+            DataMeta dataMeta = method.getAnnotation(DataMeta.class);
+            if (dataMeta != null) {
+                validateMethodParameters(DataMeta.class, method);
+                dataMetaSetter = new MethodSetter(method);
             }
             Relationship relationship = method.getAnnotation(Relationship.class);
             if (relationship != null) {
@@ -112,6 +128,16 @@ public class JsonApiResourceDeserializer<T> {
         }
     }
 
+    // Added by WillowTree
+    private void validateDataMeta(Class<?> type) {
+        if (!type.isAssignableFrom(JsonApiDataMeta.class)) {
+            throw new IllegalStateException("DataMeta type must be a JsonApiDataMeta");
+        }
+        if (dataMetaSetter != null) {
+            throw new IllegalStateException("Cannot have multiple DataMeta annotations in " + klass);
+        }
+    }
+
     private String validateResourceLink(Class<?> type, ResourceLink link) {
         String name = link.value().trim();
         if (name.length() == 0) {
@@ -152,8 +178,9 @@ public class JsonApiResourceDeserializer<T> {
         return name;
     }
 
+    // dataMeta added by WillowTree
     @SuppressWarnings("WeakerAccess")
-    public T deserialize(String id, JsonElement json, JsonDeserializationContext context)
+    public T deserialize(String id, final JsonApiDataMeta dataMeta, JsonElement json, JsonDeserializationContext context)
             throws JsonParseException {
         if (!json.isJsonObject()) {
             throw new JsonParseException("expected a json object to parse into " + klass + " but received " + json);
@@ -161,7 +188,7 @@ public class JsonApiResourceDeserializer<T> {
         T t = null;
         try {
             JsonObject jsonObject = json.getAsJsonObject();
-            t = parseObject(context, id, jsonObject);
+            t = parseObject(context, id, dataMeta, jsonObject);
             parseRelationships(context, t, jsonObject);
             parseLinks(context, t, jsonObject);
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -226,7 +253,8 @@ public class JsonApiResourceDeserializer<T> {
         }
     }
 
-    private T parseObject(JsonDeserializationContext context, String id, JsonObject jsonObject)
+    // dataMeta Added by WillowTree
+    private T parseObject(JsonDeserializationContext context, String id, JsonApiDataMeta dataMeta, JsonObject jsonObject)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         JsonElement attributesElement = jsonObject.get("attributes");
         T object;
@@ -236,6 +264,10 @@ public class JsonApiResourceDeserializer<T> {
             object = klass.newInstance();
         }
         idSetter.setOnObject(object, id);
+        // Added by WillowTree
+        if (dataMetaSetter != null && dataMeta != null) {
+            dataMetaSetter.setOnObject(object, dataMeta);
+        }
         return object;
     }
 
